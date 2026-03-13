@@ -3,6 +3,14 @@
 import { useChat } from "@ai-sdk/react";
 import { useState } from "react";
 
+type AIInput = {
+  query: string;
+};
+
+type AIOutput = {
+  rows: string[];
+};
+
 export default function Chat() {
   const [input, setInput] = useState("");
   const { messages, sendMessage } = useChat();
@@ -68,28 +76,84 @@ export default function Chat() {
               >
                 {message.role === "user" ? "U" : "AI"}
               </div>
+
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                  message.role === "user"
-                    ? "bg-blue-600 text-white rounded-tr-sm"
-                    : "bg-zinc-800 text-zinc-100 rounded-tl-sm"
-                }`}
+                className={`max-w-[80%] flex flex-col gap-2 ${message.role === "user" ? "items-end" : "items-start"}`}
               >
                 {message.parts.map((part, i) => {
-                  if (part.type === "text") {
-                    const isSQL =
-                      part.text.toUpperCase().includes("SELECT") ||
-                      part.text.toUpperCase().includes("FROM");
-                    return isSQL ? (
-                      <pre
-                        key={i}
-                        className="font-mono text-xs bg-zinc-900 rounded-lg p-3 mt-2 overflow-x-auto border-l-2 border-blue-500 whitespace-pre-wrap"
-                      >
-                        {part.text}
-                      </pre>
-                    ) : (
-                      <span key={i}>{part.text}</span>
-                    );
+                  switch (part.type) {
+                    case "text":
+                      return (
+                        <div
+                          key={`${message.id}-${i}`}
+                          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                            message.role === "user"
+                              ? "bg-blue-600 text-white rounded-tr-sm"
+                              : "bg-zinc-800 text-zinc-100 rounded-tl-sm"
+                          }`}
+                        >
+                          {part.text}
+                        </div>
+                      );
+
+                    case "tool-db":
+                      return (
+                        <div
+                          key={`${message.id}-${i}`}
+                          className="w-full p-3 bg-blue-500/10 rounded-xl border border-blue-500/20"
+                        >
+                          <div className="font-medium text-blue-400 text-xs mb-2">
+                            🔍 Database Query
+                          </div>
+                          {(part.input as unknown as AIInput)?.query && (
+                            <pre className="font-mono text-xs bg-zinc-900 rounded-lg p-3 overflow-x-auto border-l-2 border-blue-500 whitespace-pre-wrap text-zinc-300">
+                              {(part.input as unknown as AIInput).query}
+                            </pre>
+                          )}
+                          {part.state === "output-available" &&
+                            (part.output as unknown as AIOutput) && (
+                              <div className="text-xs text-emerald-400 mt-2">
+                                ✅ Returned{" "}
+                                {(part.output as unknown as AIOutput).rows
+                                  ?.length || 0}{" "}
+                                rows
+                              </div>
+                            )}
+                        </div>
+                      );
+
+                    case "tool-schema":
+                      return (
+                        <div
+                          key={`${message.id}-${i}`}
+                          className="w-full p-3 bg-purple-500/10 rounded-xl border border-purple-500/20"
+                        >
+                          <div className="font-medium text-purple-400 text-xs">
+                            📋 Schema Tool
+                          </div>
+                          {part.state === "output-available" && (
+                            <div className="text-xs text-emerald-400 mt-1">
+                              ✅ Schema loaded
+                            </div>
+                          )}
+                        </div>
+                      );
+
+                    case "step-start":
+                      return (
+                        <div
+                          key={`${message.id}-${i}`}
+                          className="text-xs text-zinc-500"
+                        >
+                          🔄 Processing...
+                        </div>
+                      );
+
+                    case "reasoning":
+                      return null;
+
+                    default:
+                      return null;
                   }
                 })}
               </div>
@@ -98,11 +162,12 @@ export default function Chat() {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-zinc-800 flex gap-3">
+        <div className="p-4 border-t border-zinc-800">
           <form
-            className="flex gap-3 flex-1"
+            className="flex gap-3"
             onSubmit={(e) => {
               e.preventDefault();
+              if (!input.trim()) return;
               sendMessage({ text: input });
               setInput("");
             }}
@@ -110,7 +175,7 @@ export default function Chat() {
             <input
               value={input}
               onChange={(e) => setInput(e.currentTarget.value)}
-              placeholder="Ask a question or write a query..."
+              placeholder="Ask about your database..."
               className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
             />
             <button
