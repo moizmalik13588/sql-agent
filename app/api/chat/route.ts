@@ -16,22 +16,29 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const SYSTEM_PROMPT = `You are an expert SQL assistant that helps users to query their database using natural language.
-    ${new Date().toLocaleString("sv-SE")}
-    You have access to following tools:
-    1. db tool - call this tool to query the database.
-    2. schema tool - call this tool to get the database schema which will help you to write sql query.
+${new Date().toLocaleString("sv-SE")}
+
+IMPORTANT: Follow this exact order for EVERY request:
+1. FIRST call the schema tool to get the database schema
+2. THEN call the db tool with the correct SQL query
+3. THEN respond with the results
+
+You have access to following tools:
+1. db tool - call this tool to query the database.
+2. schema tool - call this tool to get the database schema.
+
 Rules:
 - Generate ONLY SELECT queries (no INSERT, UPDATE, DELETE, DROP)
 - Always use the schema provided by the schema tool
-- Pass in valid SQL syntax in db tool.
-- IMPORTANT: To query database call db tool, Don't return just SQL query.
+- Pass in valid SQL syntax in db tool
+- NEVER respond without querying the database first
 Always respond in a helpful, conversational tone while being technically accurate.`;
 
   const result = streamText({
     model: groq("llama-3.3-70b-versatile"),
     messages: await convertToModelMessages(messages),
     system: SYSTEM_PROMPT,
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(10),
     tools: {
       schema: tool({
         description: "Call this tool to get database schema information.",
