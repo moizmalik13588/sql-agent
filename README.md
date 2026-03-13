@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🤖 SQL Agent — Natural Language Database Interface
 
-## Getting Started
+An AI-powered SQL Agent built with Next.js that lets you query your database using plain English. No SQL knowledge required.
 
-First, run the development server:
+## ✨ Features
 
+- **Natural Language to SQL** — Ask questions in plain English, the agent writes and runs the SQL itself
+- **Tool Calling** — AI reasons step-by-step, selects the right tool, and chains multiple actions
+- **Schema Awareness** — Agent automatically reads the database schema before generating queries
+- **Real-Time Streaming** — Watch responses stream live as the AI thinks
+- **Read-Only Safety** — Only `SELECT` queries allowed (no INSERT, UPDATE, DELETE, DROP)
+- **Production Ready** — Deployed on Vercel with Turso as the cloud database
+
+## 🧠 Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Next.js 15 (App Router) | Frontend & API routes |
+| AI SDK by Vercel | Streaming & tool calling |
+| Groq (LLaMA 3.3 70B) | Ultra-fast AI inference |
+| Drizzle ORM | Type-safe database queries |
+| Turso (LibSQL) | Cloud SQLite database |
+| Tailwind CSS | Styling |
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- A [Groq API key](https://console.groq.com)
+- A [Turso](https://turso.tech) account
+
+### Installation
+
+1. **Clone the repository**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/sql-agent.git
+cd sql-agent
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Install dependencies**
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Set up environment variables**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the root directory:
+```env
+GROQ_API_KEY=your_groq_api_key
+TURSO_DATABASE_URL=libsql://your-db.turso.io
+TURSO_AUTH_TOKEN=your_turso_auth_token
+```
 
-## Learn More
+4. **Run database migrations**
+```bash
+npm run db:generate
+npm run db:migrate
+```
 
-To learn more about Next.js, take a look at the following resources:
+5. **Seed the database (optional)**
+```bash
+npx tsx db/db.seed.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+6. **Start the development server**
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deploy on Vercel
+## 📁 Project Structure
+```
+sql-agent/
+├── app/
+│   ├── api/
+│   │   └── chat/
+│   │       └── route.ts      # AI agent API route
+│   ├── page.tsx              # Main chat UI
+│   └── layout.tsx
+├── db/
+│   ├── db.ts                 # Database client
+│   ├── schema.ts             # Drizzle schema
+│   └── db.seed.ts            # Seed data
+├── drizzle.config.ts
+└── .env.local
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 💬 Example Queries
+```
+"Show me all products in the Electronics category"
+"Which customer spent the most in February?"
+"List top 5 products by total sales"
+"How many orders were placed last month?"
+"Show sales by region"
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📜 Database Schema
+
+The project includes two tables:
+
+- **products** — id, name, category, price, stock, created_at
+- **sales** — id, product_id, quantity, total_amount, sale_date, customer_name, region
+
+## 🔒 Security
+
+- Only `SELECT` queries are allowed — the AI is instructed to never run destructive queries
+- Environment variables are used for all sensitive credentials
+
+## 📄 License
+
+MIT License — feel free to use and modify.
+
+---
+
+Built with ❤️ using Next.js, Groq, and Turso
