@@ -102,6 +102,16 @@ export default function Chat() {
                       );
 
                     case "tool-db":
+                      const rowCount = (() => {
+                        if (part.state !== "output-available") return 0;
+                        try {
+                          const parsed = JSON.parse(part.output as string);
+                          return Array.isArray(parsed) ? parsed.length : 0;
+                        } catch {
+                          return 0;
+                        }
+                      })();
+
                       return (
                         <div
                           key={`${message.id}-${i}`}
@@ -130,21 +140,16 @@ export default function Chat() {
                               {(part.input as unknown as AIInput).query}
                             </pre>
                           )}
-                          {part.state === "output-available" &&
-                            (part.output as unknown as AIOutput) && (
-                              <div className="flex items-center gap-1.5 mt-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                                <span className="text-xs text-emerald-400">
-                                  Returned{" "}
-                                  {(part.output as unknown as AIOutput).rows
-                                    ?.length || 0}{" "}
-                                  rows
-                                </span>
-                              </div>
-                            )}
+                          {part.state === "output-available" && (
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                              <span className="text-xs text-emerald-400">
+                                Returned {rowCount} rows
+                              </span>
+                            </div>
+                          )}
                         </div>
                       );
-
                     case "tool-schema":
                       return (
                         <div

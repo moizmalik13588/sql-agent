@@ -7,3 +7,4 @@ const turso = createClient({
 });
 
 export const db = drizzle(turso);
+export const client = turso;
