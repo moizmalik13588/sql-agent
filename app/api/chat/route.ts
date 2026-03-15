@@ -36,7 +36,7 @@ Rules:
 Always respond in a helpful, conversational tone while being technically accurate.`;
 
   const result = streamText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: groq("llama-3.1-70b-versatile"),
     messages: await convertToModelMessages(messages),
     system: SYSTEM_PROMPT,
     stopWhen: stepCountIs(5),
